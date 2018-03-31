@@ -102,12 +102,12 @@ public class MainActivity extends AppCompatActivity {
           }
 
           @Override
-          public void onSuccess(File file) {
+          public void onSuccess(File file,String url) {
             showResult(photos, file);
           }
 
           @Override
-          public void onError(Throwable e) {
+          public void onError(Throwable e,String url) {
           }
         }).launch();
   }

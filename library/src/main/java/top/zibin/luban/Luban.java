@@ -110,7 +110,7 @@ public class Luban implements Handler.Callback {
    */
   @UiThread private void launch(final Context context) {
     if (mPaths == null || mPaths.size() == 0 && mCompressListener != null) {
-      mCompressListener.onError(new NullPointerException("image file cannot be null"));
+      mCompressListener.onError(new NullPointerException("image file cannot be null"),"");
     }
 
     Iterator<String> iterator = mPaths.iterator();
@@ -126,14 +126,17 @@ public class Luban implements Handler.Callback {
                   new Engine(path, getImageCacheFile(context, Checker.checkSuffix(path))).compress() :
                   new File(path);
 
-              mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPRESS_SUCCESS, result));
+              FileResult fileResult=new FileResult();
+              fileResult.setFile(result);
+              fileResult.setUrl(path);
+              mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPRESS_SUCCESS, fileResult));
             } catch (IOException e) {
-              mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPRESS_ERROR, e));
+              mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPRESS_ERROR, path));
             }
           }
         });
       } else {
-        mCompressListener.onError(new IllegalArgumentException("can not read the path : " + path));
+        mCompressListener.onError(new IllegalArgumentException("can not read the path : " + path),path);
       }
       iterator.remove();
     }
@@ -169,10 +172,10 @@ public class Luban implements Handler.Callback {
         mCompressListener.onStart();
         break;
       case MSG_COMPRESS_SUCCESS:
-        mCompressListener.onSuccess((File) msg.obj);
+        mCompressListener.onSuccess(((FileResult) msg.obj).getFile(),((FileResult) msg.obj).getUrl());
         break;
       case MSG_COMPRESS_ERROR:
-        mCompressListener.onError((Throwable) msg.obj);
+        mCompressListener.onError(null, (String) msg.obj);
         break;
     }
     return false;
@@ -252,6 +255,27 @@ public class Luban implements Handler.Callback {
      */
     public List<File> get() throws IOException {
       return build().get(context);
+    }
+  }
+
+  public class FileResult{
+    public String url;
+    public File file;
+
+    public String getUrl() {
+      return url;
+    }
+
+    public void setUrl(String url) {
+      this.url = url;
+    }
+
+    public File getFile() {
+      return file;
+    }
+
+    public void setFile(File file) {
+      this.file = file;
     }
   }
 }
